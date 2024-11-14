@@ -34,7 +34,7 @@ Model 2
 
 Hyperparameter Tuning
 
-We use the Keras Tuner to optimize the following parameters:
+I used the Keras Tuner to optimize the following parameters:
 	•	Units in the First Hidden Dense Layer: Search range 16–256 in steps of 32 (using relu activation).
 	•	Units in the Second Hidden Dense Layer: Search range 12–120 in steps of 12 (using tanh activation).
 	•	Learning Rate: Search values 0.1, 0.01, 0.001, 0.0001, and 0.00001.
