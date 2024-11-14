@@ -1,0 +1,778 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "371e2e1b-8808-4e79-b01c-cdeb67ba034d",
+   "metadata": {},
+   "source": [
+    "# Homework 1\n",
+    "## Last column is the target variable that indicates whether a patient has heart disease or not. Use an 80/20 train test split to train and evaluate performance. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "82244caf-977c-4d07-af92-1936156e1d77",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "X shape: (303, 13), y shape: (303,)\n",
+      "First few rows of X: [[ 63.    1.    1.  145.  233.    1.    2.  150.    0.    2.3   3.    0.\n",
+      "    1. ]\n",
+      " [ 67.    1.    4.  160.  286.    0.    2.  108.    1.    1.5   2.    3.\n",
+      "    2. ]]\n",
+      "First few values of y: [0. 1.]\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.preprocessing import StandardScaler\n",
+    "import tensorflow as tf\n",
+    "from tensorflow import keras\n",
+    "from keras import layers\n",
+    "\n",
+    "# Load the dataset\n",
+    "data = pd.read_csv('/Users/shashankbaluni/Documents/Machine Learning for Business Part 2/Week 2/Homework_1/heart.csv')\n",
+    "\n",
+    "# Split into input (X) and output (y) variables\n",
+    "X = data.iloc[:, :-1].values  # Convert to NumPy array for easier processing\n",
+    "y = data.iloc[:, -1].values\n",
+    "\n",
+    "# Convert integers to float (Keras expects float)\n",
+    "X = np.asarray(X).astype('float64')\n",
+    "y = np.asarray(y).astype('float64')\n",
+    "\n",
+    "# Sanity check array dimensions\n",
+    "print(f\"X shape: {X.shape}, y shape: {y.shape}\")\n",
+    "print(\"First few rows of X:\", X[:2])\n",
+    "print(\"First few values of y:\", y[:2])\n",
+    "\n",
+    "# Split into training and test sets\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n",
+    "\n",
+    "# Normalize the features\n",
+    "scaler = StandardScaler().fit(X_train)\n",
+    "X_train = scaler.transform(X_train)\n",
+    "X_test = scaler.transform(X_test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4593b843-ed08-469b-b4cc-64b58709bfb2",
+   "metadata": {},
+   "source": [
+    "## a.Define the following Neural network architecture\n",
+    " #### a.Input layer of 16 neurons and sigmoid activation\n",
+    " #### b.One hidden layer with 24 neurons, using tanh activation function \n",
+    " #### c.One dropout layer that drops 20% of the neurons\n",
+    " #### d.Add an output layer with the appropriate number of neurons\n",
+    " #### e.Use Nesterov momentum stochastic gradient descent optimizer with a learning rate of 0.01 and a momentum of 0.9.\n",
+    " #### f.Train the model on the training dataset using 20 epochs and a batch size of 10\n",
+    " #### g.Evaluate the model on the test data and report the accuracy\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "4ba887bb-2818-4d4a-972e-ffb1b4f086c5",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\">Model: \"sequential_1\"</span>\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1mModel: \"sequential_1\"\u001b[0m\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n",
+       "┃<span style=\"font-weight: bold\"> Layer (type)                    </span>┃<span style=\"font-weight: bold\"> Output Shape           </span>┃<span style=\"font-weight: bold\">       Param # </span>┃\n",
+       "┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n",
+       "│ dense_3 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">16</span>)             │           <span style=\"color: #00af00; text-decoration-color: #00af00\">224</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_4 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">24</span>)             │           <span style=\"color: #00af00; text-decoration-color: #00af00\">408</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dropout_1 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dropout</span>)             │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">24</span>)             │             <span style=\"color: #00af00; text-decoration-color: #00af00\">0</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_5 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">1</span>)              │            <span style=\"color: #00af00; text-decoration-color: #00af00\">25</span> │\n",
+       "└─────────────────────────────────┴────────────────────────┴───────────────┘\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n",
+       "┃\u001b[1m \u001b[0m\u001b[1mLayer (type)                   \u001b[0m\u001b[1m \u001b[0m┃\u001b[1m \u001b[0m\u001b[1mOutput Shape          \u001b[0m\u001b[1m \u001b[0m┃\u001b[1m \u001b[0m\u001b[1m      Param #\u001b[0m\u001b[1m \u001b[0m┃\n",
+       "┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n",
+       "│ dense_3 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m16\u001b[0m)             │           \u001b[38;5;34m224\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_4 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m24\u001b[0m)             │           \u001b[38;5;34m408\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dropout_1 (\u001b[38;5;33mDropout\u001b[0m)             │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m24\u001b[0m)             │             \u001b[38;5;34m0\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_5 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m1\u001b[0m)              │            \u001b[38;5;34m25\u001b[0m │\n",
+       "└─────────────────────────────────┴────────────────────────┴───────────────┘\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Total params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">657</span> (2.57 KB)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Total params: \u001b[0m\u001b[38;5;34m657\u001b[0m (2.57 KB)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Trainable params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">657</span> (2.57 KB)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Trainable params: \u001b[0m\u001b[38;5;34m657\u001b[0m (2.57 KB)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Non-trainable params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">0</span> (0.00 B)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Non-trainable params: \u001b[0m\u001b[38;5;34m0\u001b[0m (0.00 B)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.4797 - loss: 0.7669 - val_accuracy: 0.7551 - val_loss: 0.5092\n",
+      "Epoch 2/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 846us/step - accuracy: 0.7564 - loss: 0.5283 - val_accuracy: 0.7551 - val_loss: 0.4653\n",
+      "Epoch 3/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 817us/step - accuracy: 0.7557 - loss: 0.4905 - val_accuracy: 0.7959 - val_loss: 0.4159\n",
+      "Epoch 4/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 749us/step - accuracy: 0.7561 - loss: 0.4300 - val_accuracy: 0.8571 - val_loss: 0.3704\n",
+      "Epoch 5/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 822us/step - accuracy: 0.8162 - loss: 0.3880 - val_accuracy: 0.8776 - val_loss: 0.3324\n",
+      "Epoch 6/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 862us/step - accuracy: 0.8336 - loss: 0.3758 - val_accuracy: 0.8776 - val_loss: 0.3035\n",
+      "Epoch 7/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 875us/step - accuracy: 0.8052 - loss: 0.4216 - val_accuracy: 0.8776 - val_loss: 0.2853\n",
+      "Epoch 8/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 863us/step - accuracy: 0.8119 - loss: 0.3695 - val_accuracy: 0.8776 - val_loss: 0.2779\n",
+      "Epoch 9/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 890us/step - accuracy: 0.8106 - loss: 0.3795 - val_accuracy: 0.8980 - val_loss: 0.2657\n",
+      "Epoch 10/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 764us/step - accuracy: 0.8088 - loss: 0.3742 - val_accuracy: 0.8980 - val_loss: 0.2628\n",
+      "Epoch 11/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 776us/step - accuracy: 0.8677 - loss: 0.3242 - val_accuracy: 0.8980 - val_loss: 0.2636\n",
+      "Epoch 12/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 829us/step - accuracy: 0.8695 - loss: 0.3040 - val_accuracy: 0.9388 - val_loss: 0.2623\n",
+      "Epoch 13/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 945us/step - accuracy: 0.8045 - loss: 0.3764 - val_accuracy: 0.9184 - val_loss: 0.2709\n",
+      "Epoch 14/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 872us/step - accuracy: 0.8467 - loss: 0.3206 - val_accuracy: 0.9184 - val_loss: 0.2670\n",
+      "Epoch 15/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 857us/step - accuracy: 0.8051 - loss: 0.3784 - val_accuracy: 0.9184 - val_loss: 0.2645\n",
+      "Epoch 16/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 856us/step - accuracy: 0.8522 - loss: 0.3280 - val_accuracy: 0.8980 - val_loss: 0.2659\n",
+      "Epoch 17/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 826us/step - accuracy: 0.8705 - loss: 0.2876 - val_accuracy: 0.9184 - val_loss: 0.2581\n",
+      "Epoch 18/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 798us/step - accuracy: 0.8277 - loss: 0.3257 - val_accuracy: 0.9184 - val_loss: 0.2572\n",
+      "Epoch 19/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 760us/step - accuracy: 0.8299 - loss: 0.3476 - val_accuracy: 0.9184 - val_loss: 0.2634\n",
+      "Epoch 20/20\n",
+      "\u001b[1m20/20\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 812us/step - accuracy: 0.8466 - loss: 0.3462 - val_accuracy: 0.8980 - val_loss: 0.2632\n",
+      "\u001b[1m2/2\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8282 - loss: 0.3549  \n",
+      "Accuracy: 83.61\n",
+      "Loss: 36.49\n"
+     ]
+    }
+   ],
+   "source": [
+    "from keras.models import Sequential\n",
+    "from keras.layers import Input, Dense, Dropout\n",
+    "from keras.optimizers import SGD\n",
+    "\n",
+    "# Define the Keras model\n",
+    "model = Sequential()\n",
+    "model.add(Input(shape=(13,)))  # Input layer with 13 features\n",
+    "model.add(Dense(16, activation='sigmoid'))  # (a): Input layer of 16 neurons and sigmoid activation\n",
+    "model.add(Dense(24, activation='tanh'))  # (b): One hidden layer with 24 neurons, using tanh activation function\n",
+    "model.add(Dropout(0.2))  # (c): One dropout layer that drops 20% of the neurons\n",
+    "model.add(Dense(1, activation='sigmoid'))  # (d): Add an output layer with the appropriate number of neurons\n",
+    "\n",
+    "# (e): Use Nesterov momentum stochastic gradient descent optimizer with a learning rate of 0.01 and a momentum of 0.9.\n",
+    "\n",
+    "# Compile the Keras model using SGD with Nesterov momentum\n",
+    "optimizer = SGD(learning_rate=0.01, momentum=0.9, nesterov=True)\n",
+    "model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])\n",
+    "\n",
+    "# Print out a summary of the model\n",
+    "model.summary()\n",
+    "\n",
+    "# (f):Train the model on the training dataset using 20 epochs and a batch size of 10\n",
+    "\n",
+    "# Fit the Keras model on the dataset\n",
+    "model.fit(X_train, y_train, epochs=20, batch_size=10, validation_split=0.2)\n",
+    "\n",
+    "# (g): Evaluate the model on the test data and report the accuracy\n",
+    "\n",
+    "# Evaluate the Keras model\n",
+    "loss, accuracy = model.evaluate(X_test, y_test)\n",
+    "print('Accuracy: %.2f' % (accuracy * 100))\n",
+    "print('Loss: %.2f' % (loss * 100))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e57ed4f6-9788-4ed6-9adb-14847a8ad125",
+   "metadata": {},
+   "source": [
+    "## b. Define the following Neural network architecture\n",
+    "#### a. Input layer of 32 neurons and sigmoid activation\n",
+    "#### b.\tFirst hidden layer with 64 neurons, using relu activation function \n",
+    "#### c.\tFirst dropout layer that drops 30% of the neurons\n",
+    "#### d.\tSecond hidden layer with 48 neurons, using tanh activation function\n",
+    "#### e.\tSecond dropout layer that drops 10% of the neurons\n",
+    "#### f.\tThird hidden layer with 32 neurons and relu activation and L2 regularization and random normal weight initialization with mean zero          and 1/sqrt(n) standard deviation, where n is the number of rows in the dataset.\n",
+    "#### g.\tAdd an output layer with the appropriate number of neurons\n",
+    "#### h.\tUse Adam optimizer\n",
+    "#### i.\tTrain the model on the training dataset using 25 epochs and batch size of 15\n",
+    "#### j.\tEvaluate the model on the test data and report the accuracy"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "32ef15b1-e681-4742-bcaa-721b7ad89118",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\">Model: \"sequential_2\"</span>\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1mModel: \"sequential_2\"\u001b[0m\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n",
+       "┃<span style=\"font-weight: bold\"> Layer (type)                    </span>┃<span style=\"font-weight: bold\"> Output Shape           </span>┃<span style=\"font-weight: bold\">       Param # </span>┃\n",
+       "┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n",
+       "│ dense_6 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">32</span>)             │           <span style=\"color: #00af00; text-decoration-color: #00af00\">448</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_7 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">64</span>)             │         <span style=\"color: #00af00; text-decoration-color: #00af00\">2,112</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dropout_2 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dropout</span>)             │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">64</span>)             │             <span style=\"color: #00af00; text-decoration-color: #00af00\">0</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_8 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">48</span>)             │         <span style=\"color: #00af00; text-decoration-color: #00af00\">3,120</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dropout_3 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dropout</span>)             │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">48</span>)             │             <span style=\"color: #00af00; text-decoration-color: #00af00\">0</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_9 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">32</span>)             │         <span style=\"color: #00af00; text-decoration-color: #00af00\">1,568</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_10 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">1</span>)              │            <span style=\"color: #00af00; text-decoration-color: #00af00\">33</span> │\n",
+       "└─────────────────────────────────┴────────────────────────┴───────────────┘\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n",
+       "┃\u001b[1m \u001b[0m\u001b[1mLayer (type)                   \u001b[0m\u001b[1m \u001b[0m┃\u001b[1m \u001b[0m\u001b[1mOutput Shape          \u001b[0m\u001b[1m \u001b[0m┃\u001b[1m \u001b[0m\u001b[1m      Param #\u001b[0m\u001b[1m \u001b[0m┃\n",
+       "┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n",
+       "│ dense_6 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m32\u001b[0m)             │           \u001b[38;5;34m448\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_7 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m64\u001b[0m)             │         \u001b[38;5;34m2,112\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dropout_2 (\u001b[38;5;33mDropout\u001b[0m)             │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m64\u001b[0m)             │             \u001b[38;5;34m0\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_8 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m48\u001b[0m)             │         \u001b[38;5;34m3,120\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dropout_3 (\u001b[38;5;33mDropout\u001b[0m)             │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m48\u001b[0m)             │             \u001b[38;5;34m0\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_9 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m32\u001b[0m)             │         \u001b[38;5;34m1,568\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_10 (\u001b[38;5;33mDense\u001b[0m)                │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m1\u001b[0m)              │            \u001b[38;5;34m33\u001b[0m │\n",
+       "└─────────────────────────────────┴────────────────────────┴───────────────┘\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Total params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">7,281</span> (28.44 KB)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Total params: \u001b[0m\u001b[38;5;34m7,281\u001b[0m (28.44 KB)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Trainable params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">7,281</span> (28.44 KB)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Trainable params: \u001b[0m\u001b[38;5;34m7,281\u001b[0m (28.44 KB)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Non-trainable params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">0</span> (0.00 B)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Non-trainable params: \u001b[0m\u001b[38;5;34m0\u001b[0m (0.00 B)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 5ms/step - accuracy: 0.6784 - loss: 0.7255 - val_accuracy: 0.7551 - val_loss: 0.6372\n",
+      "Epoch 2/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.7401 - loss: 0.6355 - val_accuracy: 0.7551 - val_loss: 0.5904\n",
+      "Epoch 3/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.7041 - loss: 0.6192 - val_accuracy: 0.7551 - val_loss: 0.5589\n",
+      "Epoch 4/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.7164 - loss: 0.5723 - val_accuracy: 0.7551 - val_loss: 0.5153\n",
+      "Epoch 5/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.7512 - loss: 0.5350 - val_accuracy: 0.7755 - val_loss: 0.4529\n",
+      "Epoch 6/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8024 - loss: 0.4958 - val_accuracy: 0.8367 - val_loss: 0.4014\n",
+      "Epoch 7/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8440 - loss: 0.4345 - val_accuracy: 0.8571 - val_loss: 0.3618\n",
+      "Epoch 8/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8515 - loss: 0.4098 - val_accuracy: 0.9388 - val_loss: 0.3431\n",
+      "Epoch 9/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8468 - loss: 0.3715 - val_accuracy: 0.9592 - val_loss: 0.3243\n",
+      "Epoch 10/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8563 - loss: 0.3919 - val_accuracy: 0.9388 - val_loss: 0.3149\n",
+      "Epoch 11/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8670 - loss: 0.3325 - val_accuracy: 0.9388 - val_loss: 0.3128\n",
+      "Epoch 12/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8133 - loss: 0.3693 - val_accuracy: 0.9388 - val_loss: 0.3108\n",
+      "Epoch 13/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8310 - loss: 0.3959 - val_accuracy: 0.8776 - val_loss: 0.3331\n",
+      "Epoch 14/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8503 - loss: 0.3480 - val_accuracy: 0.9388 - val_loss: 0.3018\n",
+      "Epoch 15/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8632 - loss: 0.3327 - val_accuracy: 0.9388 - val_loss: 0.3027\n",
+      "Epoch 16/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8842 - loss: 0.3482 - val_accuracy: 0.8776 - val_loss: 0.3231\n",
+      "Epoch 17/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8730 - loss: 0.3330 - val_accuracy: 0.8980 - val_loss: 0.3017\n",
+      "Epoch 18/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8636 - loss: 0.3304 - val_accuracy: 0.8980 - val_loss: 0.3200\n",
+      "Epoch 19/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8714 - loss: 0.3248 - val_accuracy: 0.9184 - val_loss: 0.3070\n",
+      "Epoch 20/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8665 - loss: 0.3251 - val_accuracy: 0.8980 - val_loss: 0.2913\n",
+      "Epoch 21/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8371 - loss: 0.3322 - val_accuracy: 0.8776 - val_loss: 0.3258\n",
+      "Epoch 22/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8587 - loss: 0.3386 - val_accuracy: 0.8980 - val_loss: 0.3123\n",
+      "Epoch 23/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8769 - loss: 0.2959 - val_accuracy: 0.8980 - val_loss: 0.2936\n",
+      "Epoch 24/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8453 - loss: 0.3348 - val_accuracy: 0.9184 - val_loss: 0.3033\n",
+      "Epoch 25/25\n",
+      "\u001b[1m13/13\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8902 - loss: 0.3191 - val_accuracy: 0.8980 - val_loss: 0.2977\n",
+      "\u001b[1m2/2\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8704 - loss: 0.3286  \n",
+      "Test Accuracy for Model 2: 85.25\n",
+      "Test Loss for Model 2: 34.48\n"
+     ]
+    }
+   ],
+   "source": [
+    "from keras.models import Sequential\n",
+    "from keras.layers import Input, Dense, Dropout\n",
+    "from keras.regularizers import l2\n",
+    "from keras.initializers import RandomNormal\n",
+    "from keras.optimizers import Adam\n",
+    "\n",
+    "# Define the second neural network\n",
+    "model2 = Sequential()\n",
+    "model2.add(Input(shape=(13,)))  # Input layer with 13 features\n",
+    "model2.add(Dense(32, activation='sigmoid'))  # (a): Input layer of 32 neurons and sigmoid activation\n",
+    "model2.add(Dense(64, activation='relu'))  # (b): First hidden layer with 64 neurons, using relu activation function\n",
+    "model2.add(Dropout(0.3))  # (c): First dropout layer that drops 30% of the neurons\n",
+    "model2.add(Dense(48, activation='tanh'))  # (d): Second hidden layer with 48 neurons, using tanh activation function\n",
+    "model2.add(Dropout(0.1))  # (e): Dropout layer dropping 10% of neurons\n",
+    "#(f): Third hidden layer with 32 neurons and relu activation and L2 regularization and random normal weight initialization with mean zero and 1/sqrt(n) standard deviation, where n is the number of rows in the dataset.\n",
+    "model2.add(Dense(32, activation='relu', \n",
+    "                 kernel_regularizer=l2(0.01),  # L2 regularization\n",
+    "                 kernel_initializer=RandomNormal(mean=0.0, stddev=1/np.sqrt(X_train.shape[0]))))  # Random Normal initialization\n",
+    "model2.add(Dense(1, activation='sigmoid'))  # (g): Add an output layer with the appropriate number of neurons\n",
+    "\n",
+    "# (h): Use Adam optimizer\n",
+    "# Compile the model using Adam optimizer\n",
+    "model2.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy'])\n",
+    "\n",
+    "# Print out a summary of the model\n",
+    "model2.summary()\n",
+    "\n",
+    "# (i): Train the model on the training dataset using 25 epochs and batch size of 15\n",
+    "history2 = model2.fit(X_train, y_train, epochs=25, batch_size=15, validation_split=0.2)\n",
+    "\n",
+    "# (j): Evaluate the model on the test data and report the accuracy\n",
+    "loss2, accuracy2 = model2.evaluate(X_test, y_test)\n",
+    "print('Test Accuracy for Model 2: %.2f' % (accuracy2 * 100))\n",
+    "print('Test Loss for Model 2: %.2f' % (loss2 * 100))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0909356c-bf42-43a0-af35-7c49d4ca9cda",
+   "metadata": {},
+   "source": [
+    "## c.\tUse the keras tuner to tune the following (Hint: you can modify the keras_tuner.ipynb file that we went over in class)\n",
+    "#### a.\tNumber of units (neurons) in the first hidden dense layer. Search from 16 to 256 in steps of 32. Use the relu activation function\n",
+    "#### b.\tNumber of units (neurons) in the second hidden dense layer. Search from 12 to 120 in steps of 12. Use the tanh activation function.\n",
+    "#### c.\tTune the learning rate parameter by trying values of 0.1, 0.01, 0.001, 0.0001 or 0.00001\n",
+    "#### d.\tUse the Hyperband tuner\n",
+    "#### e.\tStop training early after the validation loss does not improve with 3 epochs\n",
+    "#### f.\tReport the tuned hyperparameters\n",
+    "#### g.\tFind the optimal number of epochs to train the model with the tuned hyperparameters from above\n",
+    "#### h.\tReport the optimal number of epochs\n",
+    "#### i.\tRe-instantiate the hypermodel and train it with the optimal number of epochs from above.\n",
+    "#### j.\tEvaluate the hypermodel on the test data and report the test accuracy achieved."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "fa4702c7-9d90-4774-9e01-9f71a3060c18",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import keras_tuner as kt\n",
+    "from tensorflow import keras\n",
+    "from keras import layers\n",
+    "\n",
+    "def model_builder(hp):\n",
+    "    model = keras.Sequential()\n",
+    "\n",
+    "    # Define the input layer for structured data\n",
+    "    model.add(layers.InputLayer(input_shape=(X_train.shape[1],)))  # Adjust to your feature count\n",
+    "\n",
+    "# (a): Number of units (neurons) in the first hidden dense layer. Search from 16 to 256 in steps of 32. Use the relu activation function\n",
+    "\n",
+    "    # Tune the number of units in the first Dense layer\n",
+    "    hp_units1 = hp.Int('units1', min_value=16, max_value=256, step=32)\n",
+    "    model.add(layers.Dense(units=hp_units1, activation='relu'))\n",
+    "\n",
+    "# (b): Number of units (neurons) in the second hidden dense layer. Search from 12 to 120 in steps of 12. Use the tanh activation function.\n",
+    "\n",
+    "    # Tune the number of units in the second Dense layer\n",
+    "    hp_units2 = hp.Int('units2', min_value=12, max_value=120, step=12)\n",
+    "    model.add(layers.Dense(units=hp_units2, activation='tanh'))\n",
+    "\n",
+    "    # Add an output layer for binary classification\n",
+    "    model.add(layers.Dense(1, activation='sigmoid'))\n",
+    "\n",
+    "# (c): Tune the learning rate parameter by trying values of 0.1, 0.01, 0.001, 0.0001 or 0.00001\n",
+    "    \n",
+    "    # Tune the learning rate for the optimizer\n",
+    "    hp_learning_rate = hp.Choice('learning_rate', values=[0.1, 0.01, 0.001, 0.0001, 0.00001])\n",
+    "\n",
+    "    # Compile the model using the Adam optimizer and the tuned learning rate\n",
+    "    model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate),\n",
+    "                  loss='binary_crossentropy',\n",
+    "                  metrics=['accuracy'])\n",
+    "\n",
+    "    return model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "3c57edab-f4a6-4805-8660-d24136d78cea",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Reloading Tuner from my_dir/heart_disease_tuning/tuner0.json\n",
+      "Optimal units1: 112\n",
+      "Optimal units2: 12\n",
+      "Optimal learning rate: 0.001\n"
+     ]
+    }
+   ],
+   "source": [
+    "# (d): Use the Hyperband Tuner\n",
+    "\n",
+    "# Initialize the Hyperband tuner\n",
+    "tuner = kt.Hyperband(model_builder,\n",
+    "                     objective='val_accuracy',\n",
+    "                     max_epochs=50,\n",
+    "                     factor=3,\n",
+    "                     directory='my_dir',\n",
+    "                     project_name='heart_disease_tuning')\n",
+    "\n",
+    "# (e): Early Stopping Callback\n",
+    "\n",
+    "# Early stopping to prevent overfitting\n",
+    "stop_early = keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)\n",
+    "\n",
+    "# Perform the hyperparameter search\n",
+    "tuner.search(X_train, y_train, epochs=50, validation_split=0.2, callbacks=[stop_early])\n",
+    "\n",
+    "# (f): Report the tuned hyperparameters\n",
+    "\n",
+    "# Retrieve the best hyperparameters\n",
+    "best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]\n",
+    "print(f\"Optimal units1: {best_hps.get('units1')}\")\n",
+    "print(f\"Optimal units2: {best_hps.get('units2')}\")\n",
+    "print(f\"Optimal learning rate: {best_hps.get('learning_rate')}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "25a39d33-32f2-4c49-b604-44c363724411",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/50\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/anaconda3/lib/python3.12/site-packages/keras/src/layers/core/input_layer.py:26: UserWarning: Argument `input_shape` is deprecated. Use `shape` instead.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 12ms/step - accuracy: 0.4561 - loss: 0.7609 - val_accuracy: 0.6512 - val_loss: 0.6536\n",
+      "Epoch 2/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.6853 - loss: 0.5911 - val_accuracy: 0.7674 - val_loss: 0.5324\n",
+      "Epoch 3/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.7938 - loss: 0.5028 - val_accuracy: 0.7907 - val_loss: 0.4623\n",
+      "Epoch 4/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8047 - loss: 0.4549 - val_accuracy: 0.7907 - val_loss: 0.4185\n",
+      "Epoch 5/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8060 - loss: 0.4198 - val_accuracy: 0.8140 - val_loss: 0.3884\n",
+      "Epoch 6/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8127 - loss: 0.3818 - val_accuracy: 0.8372 - val_loss: 0.3654\n",
+      "Epoch 7/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8455 - loss: 0.3572 - val_accuracy: 0.8372 - val_loss: 0.3482\n",
+      "Epoch 8/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8261 - loss: 0.3548 - val_accuracy: 0.8605 - val_loss: 0.3358\n",
+      "Epoch 9/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8603 - loss: 0.3298 - val_accuracy: 0.8605 - val_loss: 0.3262\n",
+      "Epoch 10/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8780 - loss: 0.3085 - val_accuracy: 0.8605 - val_loss: 0.3197\n",
+      "Epoch 11/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8489 - loss: 0.3266 - val_accuracy: 0.8605 - val_loss: 0.3172\n",
+      "Epoch 12/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8827 - loss: 0.2901 - val_accuracy: 0.8605 - val_loss: 0.3152\n",
+      "Epoch 13/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8823 - loss: 0.2868 - val_accuracy: 0.8837 - val_loss: 0.3132\n",
+      "Epoch 14/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8549 - loss: 0.3032 - val_accuracy: 0.8837 - val_loss: 0.3107\n",
+      "Epoch 15/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8626 - loss: 0.2864 - val_accuracy: 0.8837 - val_loss: 0.3054\n",
+      "Epoch 16/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8878 - loss: 0.2818 - val_accuracy: 0.8837 - val_loss: 0.3028\n",
+      "Epoch 17/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8741 - loss: 0.2885 - val_accuracy: 0.9070 - val_loss: 0.3010\n",
+      "Epoch 18/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8655 - loss: 0.2853 - val_accuracy: 0.9070 - val_loss: 0.2993\n",
+      "Epoch 19/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8791 - loss: 0.2769 - val_accuracy: 0.9070 - val_loss: 0.2984\n",
+      "Epoch 20/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8899 - loss: 0.2606 - val_accuracy: 0.8605 - val_loss: 0.2990\n",
+      "Epoch 21/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.9105 - loss: 0.2303 - val_accuracy: 0.8605 - val_loss: 0.2980\n",
+      "Epoch 22/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8951 - loss: 0.2569 - val_accuracy: 0.8605 - val_loss: 0.2972\n",
+      "Epoch 23/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8930 - loss: 0.2528 - val_accuracy: 0.8605 - val_loss: 0.2974\n",
+      "Epoch 24/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8997 - loss: 0.2430 - val_accuracy: 0.8605 - val_loss: 0.2996\n",
+      "Epoch 25/50\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.9039 - loss: 0.2339 - val_accuracy: 0.8605 - val_loss: 0.3052\n",
+      "Optimal number of epochs: 17\n"
+     ]
+    }
+   ],
+   "source": [
+    "# (g): Find the optimal number of epochs to train the model with the tuned hyperparameters from above\n",
+    "\n",
+    "# Build the model with the best hyperparameters\n",
+    "hypermodel = tuner.hypermodel.build(best_hps)\n",
+    "\n",
+    "# Use early stopping to find the optimal number of epochs\n",
+    "history = hypermodel.fit(X_train, y_train, epochs=50, validation_split=0.2, callbacks=[stop_early])\n",
+    "\n",
+    "# (h): Report the optimal number of epochs\n",
+    "\n",
+    "# epoch with the best validation accuracy\n",
+    "val_acc_per_epoch = history.history['val_accuracy']\n",
+    "best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1\n",
+    "print('Optimal number of epochs:', best_epoch)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "id": "f1f42200-760d-4c41-b023-7795c6679149",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/17\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/anaconda3/lib/python3.12/site-packages/keras/src/layers/core/input_layer.py:26: UserWarning: Argument `input_shape` is deprecated. Use `shape` instead.\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 10ms/step - accuracy: 0.6593 - loss: 0.6319 - val_accuracy: 0.7674 - val_loss: 0.5504\n",
+      "Epoch 2/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.7829 - loss: 0.5467 - val_accuracy: 0.7674 - val_loss: 0.4834\n",
+      "Epoch 3/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 4ms/step - accuracy: 0.7912 - loss: 0.4809 - val_accuracy: 0.8372 - val_loss: 0.4376\n",
+      "Epoch 4/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8036 - loss: 0.4414 - val_accuracy: 0.8605 - val_loss: 0.4034\n",
+      "Epoch 5/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8047 - loss: 0.4401 - val_accuracy: 0.8605 - val_loss: 0.3814\n",
+      "Epoch 6/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8511 - loss: 0.3774 - val_accuracy: 0.8605 - val_loss: 0.3651\n",
+      "Epoch 7/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8301 - loss: 0.3860 - val_accuracy: 0.8837 - val_loss: 0.3519\n",
+      "Epoch 8/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 4ms/step - accuracy: 0.8549 - loss: 0.3493 - val_accuracy: 0.8837 - val_loss: 0.3412\n",
+      "Epoch 9/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8708 - loss: 0.3274 - val_accuracy: 0.8837 - val_loss: 0.3348\n",
+      "Epoch 10/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8420 - loss: 0.3389 - val_accuracy: 0.8605 - val_loss: 0.3312\n",
+      "Epoch 11/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8716 - loss: 0.3069 - val_accuracy: 0.8605 - val_loss: 0.3273\n",
+      "Epoch 12/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8541 - loss: 0.3402 - val_accuracy: 0.9070 - val_loss: 0.3197\n",
+      "Epoch 13/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8507 - loss: 0.3109 - val_accuracy: 0.9070 - val_loss: 0.3178\n",
+      "Epoch 14/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 5ms/step - accuracy: 0.8717 - loss: 0.3038 - val_accuracy: 0.8837 - val_loss: 0.3146\n",
+      "Epoch 15/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8856 - loss: 0.2770 - val_accuracy: 0.8837 - val_loss: 0.3103\n",
+      "Epoch 16/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 3ms/step - accuracy: 0.8674 - loss: 0.2988 - val_accuracy: 0.8837 - val_loss: 0.3087\n",
+      "Epoch 17/17\n",
+      "\u001b[1m6/6\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 2ms/step - accuracy: 0.8806 - loss: 0.2876 - val_accuracy: 0.8837 - val_loss: 0.3074\n",
+      "\u001b[1m3/3\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - accuracy: 0.8598 - loss: 0.3443  \n",
+      "Final Test Accuracy:0.87\n",
+      "Final Test Loss:0.34\n"
+     ]
+    }
+   ],
+   "source": [
+    "# (i): Re-instantiate the hypermodel and train it with the optimal number of epochs from above.\n",
+    "\n",
+    "# Re-instantiate and train the model with the optimal number of epochs\n",
+    "hypermodel = tuner.hypermodel.build(best_hps)\n",
+    "\n",
+    "# Train the model with the optimal number of epochs\n",
+    "final_history = hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)\n",
+    "\n",
+    "# (j):\tEvaluate the hypermodel on the test data and report the test accuracy achieved.\n",
+    "test_loss, test_accuracy = hypermodel.evaluate(X_test, y_test)\n",
+    "print(f\"Final Test Accuracy:{test_accuracy:.02f}\")\n",
+    "print(f\"Final Test Loss:{test_loss:.02f}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
